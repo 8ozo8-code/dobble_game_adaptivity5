@@ -2,69 +2,100 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>도블 타임어택</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 [무한 서바이벌] 도블 타임어택</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
-        .card-container { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
-        .card { width: 250px; height: 250px; background: white; border: 5px solid #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
-        #message { font-size: 1.5rem; font-weight: bold; margin: 20px; height: 30px; }
-        .btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 8px; margin: 5px; }
+        body { font-family: 'Pretendard', sans-serif; text-align: center; background-color: #f8f9fa; margin: 0; padding: 20px; transition: 0.3s; }
+        .header { max-width: 600px; margin: 0 auto; }
+        .stats { font-size: 1.2rem; font-weight: bold; margin: 15px 0; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card-container { display: flex; justify-content: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
+        .card { width: 280px; height: 280px; background-color: #F0F8FF; border: 5px solid #4682B4; border-radius: 50%; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; }
+        .item { position: absolute; font-weight: bold; color: black; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); white-space: nowrap; }
+        .progress-bar { width: 100%; max-width: 600px; height: 20px; background-color: #ddd; border-radius: 10px; margin: 0 auto 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background-color: #ff4757; width: 100%; transition: width 0.1s linear; }
+        #message { font-size: 1.2rem; font-weight: bold; height: 30px; margin-top: 10px; }
+        #word-pad { display: none; max-width: 350px; margin: 0 auto; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        #word-pad button { padding: 10px 15px; font-size: 1rem; background-color: white; border: 2px solid #4682B4; border-radius: 20px; color: #4682B4; cursor: pointer; }
+        .overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; }
+        .btn-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+        button { font-size: 1.1rem; padding: 12px 25px; background-color: #4682B4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>도블 타임어택</h1>
-    <div id="stats">점수: <span id="score">0</span> | 남은 하트: <span id="hp">5</span></div>
-    
-    <div class="card-container">
-        <div class="card" id="card1">카드1</div>
-        <div class="card" id="card2">카드2</div>
+    <div class="header">
+        <h1 id="main-title">🚀 도블 타임어택</h1>
+        <div class="stats">🎯 점수: <span id="score">0</span>점 | ❤️ <span id="hp">5</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="timer-bar"></div></div>
     </div>
 
-    <div id="word-pad" style="display:none; justify-content:center; gap:10px;"></div>
+    <div class="card-container">
+        <div class="card" id="card1"></div>
+        <div class="card" id="card2"></div>
+    </div>
+
+    <div id="word-pad"></div>
     <div id="message"></div>
 
-    <div id="overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <div id="mode-select">
-            <button class="btn" onclick="setMode('text')">단어 모드 시작</button>
-        </div>
+    <div class="overlay" id="overlay">
+        <h1>🎮 게임을 시작하세요</h1>
+        <button onclick="startGame('normal')">게임 시작하기</button>
     </div>
 
     <script>
-        let score = 0, hp = 5;
-        let words = ["사과", "바나나", "포도", "딸기", "수박", "강아지", "고양이", "자동차"];
-        
-        function setMode(mode) {
+        let score = 0, hp = 5, timerInterval, timeLeft, timeLimit = 5.0;
+        let card1, card2, expectedAnswerStr = "정답";
+
+        function startGame(difficulty) {
             document.getElementById('overlay').style.display = 'none';
+            score = 0; hp = 5;
             nextRound();
         }
 
         function nextRound() {
-            document.getElementById('message').innerText = "";
-            if (hp <= 0) { alert("게임 종료! 점수: " + score); location.reload(); return; }
+            // 🛠️ 버그 수정 1: 라운드 시작 시 이전 메시지 및 타이머 초기화
+            showMessage("", "#000");
+            clearInterval(timerInterval);
             
-            // 간단하게 카드 렌더링
-            document.getElementById('card1').innerText = words[Math.floor(Math.random()*words.length)];
-            document.getElementById('card2').innerText = words[Math.floor(Math.random()*words.length)];
-            
-            // 단어 패드 렌더링
-            const pad = document.getElementById('word-pad');
-            pad.style.display = 'flex';
-            pad.innerHTML = '';
-            words.forEach(w => {
-                let b = document.createElement('button');
-                b.className = 'btn';
-                b.innerText = w;
-                b.onclick = () => check(w);
-                pad.appendChild(b);
-            });
+            if (hp <= 0) { 
+                document.getElementById('overlay').style.display = 'flex';
+                return; 
+            }
+
+            // 임시 데이터 렌더링 (실제 게임 로직 삽입 지점)
+            card1 = [1, 2, 3]; card2 = [3, 4, 5]; expectedAnswerStr = "3";
+            startTimer();
         }
 
-        function check(val) {
-            // 정답 로직을 간단히 구성
-            score++;
-            document.getElementById('score').innerText = score;
-            nextRound();
+        function startTimer() {
+            // 🛠️ 버그 수정 2: 어려움 난이도 타이머 오작동 방지
+            clearInterval(timerInterval); 
+            timeLeft = timeLimit;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = "100%";
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                bar.style.width = `${Math.max(0, (timeLeft / timeLimit) * 100)}%`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleWrongAnswer(`⏰ 시간 초과!`);
+                }
+            }, 100);
+        }
+
+        function handleWrongAnswer(msg) {
+            clearInterval(timerInterval); // 즉시 타이머 중단
+            hp--;
+            showMessage(msg, "#ff4757");
+            setTimeout(nextRound, 1000);
+        }
+
+        function showMessage(text, color) {
+            const msgEl = document.getElementById('message');
+            msgEl.innerText = text;
+            msgEl.style.color = color;
         }
     </script>
 </body>
