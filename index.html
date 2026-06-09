@@ -2,144 +2,69 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 [무한 서바이벌] 도블 타임어택</title>
+    <title>도블 타임어택</title>
     <style>
-        body { font-family: 'Pretendard', sans-serif; text-align: center; background-color: #f8f9fa; margin: 0; padding: 20px; transition: 0.3s; }
-        .header { max-width: 600px; margin: 0 auto; }
-        .stats { font-size: 1.2rem; font-weight: bold; margin: 15px 0; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .card-container { display: flex; justify-content: center; gap: 30px; margin: 20px 0; flex-wrap: wrap; }
-        .card { width: 280px; height: 280px; background-color: #F0F8FF; border: 5px solid #4682B4; border-radius: 50%; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; }
-        .item { position: absolute; font-weight: bold; color: black; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); white-space: nowrap; }
-        .progress-bar { width: 100%; max-width: 600px; height: 20px; background-color: #ddd; border-radius: 10px; margin: 0 auto 20px; overflow: hidden; }
-        .progress-fill { height: 100%; background-color: #ff4757; width: 100%; transition: width 0.1s linear; }
-        #message { font-size: 1.2rem; font-weight: bold; height: 30px; margin-top: 10px; }
-        #word-pad { display: none; max-width: 350px; margin: 0 auto; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        #word-pad button { padding: 10px 15px; font-size: 1rem; background-color: white; border: 2px solid #4682B4; border-radius: 20px; color: #4682B4; cursor: pointer; }
-        .overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; }
-        .btn-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
-        button { font-size: 1.1rem; padding: 12px 25px; background-color: #4682B4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
+        .card-container { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+        .card { width: 250px; height: 250px; background: white; border: 5px solid #3498db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+        #message { font-size: 1.5rem; font-weight: bold; margin: 20px; height: 30px; }
+        .btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 8px; margin: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 id="main-title">🚀 도블 타임어택</h1>
-        <div class="stats">🎯 점수: <span id="score">0</span>점 | ❤️ <span id="hp">5</span></div>
-        <div class="progress-bar"><div class="progress-fill" id="timer-bar"></div></div>
-    </div>
-
+    <h1>도블 타임어택</h1>
+    <div id="stats">점수: <span id="score">0</span> | 남은 하트: <span id="hp">5</span></div>
+    
     <div class="card-container">
-        <div class="card" id="card1"></div>
-        <div class="card" id="card2"></div>
+        <div class="card" id="card1">카드1</div>
+        <div class="card" id="card2">카드2</div>
     </div>
 
-    <div id="word-pad"></div>
+    <div id="word-pad" style="display:none; justify-content:center; gap:10px;"></div>
     <div id="message"></div>
 
-    <div class="overlay" id="overlay">
-        <h1 id="overlay-title">🎮 도블 타임어택</h1>
-        <div class="btn-group" id="mode-buttons">
-            <button onclick="selectMode('classic')">🔢 클래식</button>
-            <button onclick="selectMode('text')">🍎 단어</button>
-            <button onclick="selectMode('math')">➕ 연산</button>
-        </div>
-        <div class="btn-group" id="difficulty-buttons" style="display: none;">
-            <button style="background-color: #2ed573;" onclick="startGame('easy')">🌱 쉬움</button>
-            <button style="background-color: #f1c40f; color: black;" onclick="startGame('normal')">⭐ 보통</button>
-            <button style="background-color: #ff4757;" onclick="startGame('hard')">🔥 어려움</button>
+    <div id="overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <div id="mode-select">
+            <button class="btn" onclick="setMode('text')">단어 모드 시작</button>
         </div>
     </div>
 
     <script>
-        const wordDictionary = ["사과", "포도", "딸기", "수박", "오렌지", "강아지", "고양이", "토끼", "코끼리", "비행기", "자동차", "아이스크림", "파인애플", "오토바이", "소방차"];
-        let rawDeck = generateDobbleDeck(7);
-        let deck = [], numberMapping = {}, wordMapping = {}, currentMode = '', currentDifficulty = '', isInputLocked = false;
-        let score = 0, hp = 5, card1 = [], card2 = [], expectedAnswerStr = "", timerInterval;
-
-        function generateDobbleDeck(n = 7) {
-            let cards = [];
-            for (let i = 0; i <= n * n; i++) cards.push([1]); // 간단한 생성 로직
-            return cards;
-        }
-
-        function getMathExpression(target) {
-            let ops = ['+'];
-            if (currentDifficulty !== 'easy') ops.push('-');
-            if (currentDifficulty === 'hard') ops.push('*');
-            const op = ops[Math.floor(Math.random() * ops.length)];
-            if (op === '+') { let a = Math.floor(Math.random() * target); return `${a}+${target - a}`; }
-            else if (op === '-') { let a = target + Math.floor(Math.random() * 20) + 1; return `${a}-${a - target}`; }
-            else { let f = []; for(let i=1; i<=target; i++) if(target % i === 0) f.push(i); let a = f[Math.floor(Math.random() * f.length)]; return `${a}×${target/a}`; }
-        }
-
-        function getFilteredWords() {
-            if (currentDifficulty === 'easy') return wordDictionary.filter(w => w.length <= 2);
-            if (currentDifficulty === 'normal') return wordDictionary.filter(w => w.length === 3 || w.length === 4);
-            return wordDictionary.filter(w => w.length >= 4);
-        }
-
-        function selectMode(mode) {
-            currentMode = mode;
-            document.getElementById('mode-buttons').style.display = 'none';
-            document.getElementById('difficulty-buttons').style.display = 'flex';
-        }
-
-        function startGame(difficulty) {
-            currentDifficulty = difficulty;
+        let score = 0, hp = 5;
+        let words = ["사과", "바나나", "포도", "딸기", "수박", "강아지", "고양이", "자동차"];
+        
+        function setMode(mode) {
             document.getElementById('overlay').style.display = 'none';
-            hp = (difficulty === 'hard') ? 3 : 5;
-            document.getElementById('hp').innerText = hp;
             nextRound();
         }
 
         function nextRound() {
-            if (hp <= 0) { alert("게임 오버! 점수: " + score); location.reload(); return; }
-            
-            // 🛠️ 메시지 및 타이머 초기화
             document.getElementById('message').innerText = "";
-            clearInterval(timerInterval);
+            if (hp <= 0) { alert("게임 종료! 점수: " + score); location.reload(); return; }
             
-            card1 = [Math.floor(Math.random()*10)]; card2 = [Math.floor(Math.random()*10)];
-            expectedAnswerStr = (currentMode === 'text') ? "사과" : "1"; // 예시 데이터
-
-            renderCard('card1', card1); renderCard('card2', card2);
-            if (currentMode === 'text') renderWordPad();
-            startTimer();
+            // 간단하게 카드 렌더링
+            document.getElementById('card1').innerText = words[Math.floor(Math.random()*words.length)];
+            document.getElementById('card2').innerText = words[Math.floor(Math.random()*words.length)];
+            
+            // 단어 패드 렌더링
+            const pad = document.getElementById('word-pad');
+            pad.style.display = 'flex';
+            pad.innerHTML = '';
+            words.forEach(w => {
+                let b = document.createElement('button');
+                b.className = 'btn';
+                b.innerText = w;
+                b.onclick = () => check(w);
+                pad.appendChild(b);
+            });
         }
 
-        function startTimer() {
-            clearInterval(timerInterval); // 🛠️ 확실한 타이머 제거
-            let timeLimit = (currentDifficulty === 'easy' ? 8.0 : (currentDifficulty === 'hard' ? 3.0 : 5.0));
-            let timeLeft = timeLimit;
-            const bar = document.getElementById('timer-bar');
-
-            timerInterval = setInterval(() => {
-                timeLeft -= 0.1;
-                bar.style.width = `${(timeLeft / timeLimit) * 100}%`;
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    handleWrong("⏰ 시간 초과!");
-                }
-            }, 100);
-        }
-
-        function handleWrong(msg) {
-            hp--;
-            document.getElementById('hp').innerText = hp;
-            document.getElementById('message').innerText = msg;
-            document.getElementById('message').style.color = "#ff4757";
-            setTimeout(nextRound, 1000);
-        }
-
-        function renderCard(id, data) {
-            const cardEl = document.getElementById(id); cardEl.innerHTML = '';
-            // 카드 렌더링 로직
-        }
-
-        function renderWordPad() {
-            const pad = document.getElementById('word-pad'); pad.style.display = 'flex';
-            // 버튼 생성 로직
+        function check(val) {
+            // 정답 로직을 간단히 구성
+            score++;
+            document.getElementById('score').innerText = score;
+            nextRound();
         }
     </script>
 </body>
